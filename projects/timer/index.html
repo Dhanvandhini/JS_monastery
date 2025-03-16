@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #d95550;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .timer-display {
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+            color: white;
+            border-radius: 10px;
+            font-size: 5rem;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            font-weight: bold;
+            position: relative;
+        }
+
+        .session-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: #d95550;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: #c04a46;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: #4c9195;
+        }
+
+        .btn-secondary:hover {
+            background-color: #3b7478;
+        }
+
+        .settings {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .setting-group label {
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .time-setting {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time-display {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 40px;
+            font-weight: bold;
+        }
+
+        .increment-btn, .decrement-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .increment-btn:hover, .decrement-btn:hover {
+            color: #d95550;
+        }
+
+        .tasks {
+            margin-top: 30px;
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .tasks h3 {
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .task-form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        #task-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            font-size: 1rem;
+        }
+
+        #add-task-btn {
+            padding: 10px 15px;
+            background-color: #d95550;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+
+        .task-list {
+            list-style-type: none;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .task-checkbox {
+            margin-right: 10px;
+        }
+
+        .task-text {
+            flex: 1;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .task-delete {
+            background: none;
+            border: none;
+            color: #d95550;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 576px) {
+            .timer-display {
+                font-size: 4rem;
+            }
+
+            .settings {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Timer animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pomodoro Timer</h1>
+        
+        <div class="timer-display" id="timer">
+            <span class="session-label" id="session-label">Focus</span>
+            <span id="time-left">25:00</span>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="start-btn">
+                <i class="fas fa-play"></i> Start
+            </button>
+            <button class="btn" id="pause-btn" disabled>
+                <i class="fas fa-pause"></i> Pause
+            </button>
+            <button class="btn" id="reset-btn">
+                <i class="fas fa-redo-alt"></i> Reset
+            </button>
+            <button class="btn btn-secondary" id="skip-btn">
+                <i class="fas fa-step-forward"></i> Skip
+            </button>
+        </div>
+        
+        <div class="settings">
+            <div class="setting-group">
+                <label>Focus Time (min)</label>
+                <div class="time-setting">
+                    <button class="decrement-btn" id="focus-decrement">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="time-display" id="focus-time">25</span>
+                    <button class="increment-btn" id="focus-increment">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <label>Short Break (min)</label>
+                <div class="time-setting">
+                    <button class="decrement-btn" id="short-break-decrement">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="time-display" id="short-break-time">5</span>
+                    <button class="increment-btn" id="short-break-increment">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <label>Long Break (min)</label>
+                <div class="time-setting">
+                    <button class="decrement-btn" id="long-break-decrement">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="time-display" id="long-break-time">15</span>
+                    <button class="increment-btn" id="long-break-increment">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tasks">
+            <h3>Tasks</h3>
+            <form class="task-form" id="task-form">
+                <input type="text" id="task-input" placeholder="What are you working on?">
+                <button type="submit" id="add-task-btn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </form>
+            
+            <ul class="task-list" id="task-list">
+                <!-- Tasks will be added here dynamically -->
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                        // DOM Elements
+                        const timerDisplay = document.getElementById('timer');
+                        const timeLeft = document.getElementById('time-left');
+                        const sessionLabel = document.getElementById('session-label');
+                        const startBtn = document.getElementById('start-btn');
+                        const pauseBtn = document.getElementById('pause-btn');
+                        const resetBtn = document.getElementById('reset-btn');
+                        const skipBtn = document.getElementById('skip-btn');
+                        
+                        // Settings elements
+                        const focusTime = document.getElementById('focus-time');
+                        const shortBreakTime = document.getElementById('short-break-time');
+                        const longBreakTime = document.getElementById('long-break-time');
+                        const focusIncrement = document.getElementById('focus-increment');
+                        const focusDecrement = document.getElementById('focus-decrement');
+                        const shortBreakIncrement = document.getElementById('short-break-increment');
+                        const shortBreakDecrement = document.getElementById('short-break-decrement');
+                        const longBreakIncrement = document.getElementById('long-break-increment');
+                        const longBreakDecrement = document.getElementById('long-break-decrement');
+                        
+                        // Task elements
+                        const taskForm = document.getElementById('task-form');
+                        const taskInput = document.getElementById('task-input');
+                        const taskList = document.getElementById('task-list');
+                        
+                        // Timer state
+                        const timerState = {
+                            minutes: parseInt(focusTime.textContent),
+                            seconds: 0,
+                            isRunning: false,
+                            timerId: null,
+                            mode: 'focus', // 'focus', 'shortBreak', 'longBreak'
+                            completedPomodoros: 0
+                        };
+                        
+                        // Load tasks from localStorage
+                        let tasks = JSON.parse(localStorage.getItem('pomodoro-tasks')) || [];
+                        
+                        // Initialize
+                        renderTime();
+                        renderTasks();
+                        
+                        // Event listeners
+                        startBtn.addEventListener('click', startTimer);
+                        pauseBtn.addEventListener('click', pauseTimer);
+                        resetBtn.addEventListener('click', resetTimer);
+                        skipBtn.addEventListener('click', skipSession);
+                        
+                        // Settings event listeners
+                        focusIncrement.addEventListener('click', () => updateSetting('focus', 1));
+                        focusDecrement.addEventListener('click', () => updateSetting('focus', -1));
+                        shortBreakIncrement.addEventListener('click', () => updateSetting('shortBreak', 1));
+                        shortBreakDecrement.addEventListener('click', () => updateSetting('shortBreak', -1));
+                        longBreakIncrement.addEventListener('click', () => updateSetting('longBreak', 1));
+                        longBreakDecrement.addEventListener('click', () => updateSetting('longBreak', -1));
+                        
+                        // Task event listeners
+                        taskForm.addEventListener('submit', (e) => {
+                            e.preventDefault();
+                            addTask();
+                        });
+                        
+                        taskList.addEventListener('click', (e) => {
+                            const target = e.target;
+                            if (target.classList.contains('task-checkbox')) {
+                                toggleTask(target.closest('.task-item').dataset.id);
+                            } else if (target.classList.contains('task-delete') || target.closest('.task-delete')) {
+                                deleteTask(target.closest('.task-item').dataset.id);
+                            }
+                        });
+                        
+                        // Timer functions
+                        function startTimer() {
+                            if (timerState.isRunning) return;
+                            
+                            // Toggle button states
+                            startBtn.disabled = true;
+                            pauseBtn.disabled = false;
+                            
+                            timerState.isRunning = true;
+                            timerDisplay.classList.add('pulse');
+                            
+                            timerState.timerId = setInterval(() => {
+                                updateTimer();
+                                renderTime();
+                                
+                                if (timerState.minutes === 0 && timerState.seconds === 0) {
+                                    finishSession();
+                                }
+                            }, 1000);
+                        }
+                        
+                        function pauseTimer() {
+                            if (!timerState.isRunning) return;
+                            
+                            // Toggle button states
+                            startBtn.disabled = false;
+                            pauseBtn.disabled = true;
+                            
+                            clearInterval(timerState.timerId);
+                            timerState.isRunning = false;
+                            timerDisplay.classList.remove('pulse');
+                        }
+                        
+                        function resetTimer() {
+                            pauseTimer();
+                            
+                            // Reset to current mode's full time
+                            setCurrentModeTime();
+                            renderTime();
+                        }
+                        
+                        function updateTimer() {
+                            if (timerState.seconds === 0) {
+                                if (timerState.minutes === 0) {
+                                    return; // Timer finished
+                                }
+                                timerState.minutes--;
+                                timerState.seconds = 59;
+                            } else {
+                                timerState.seconds--;
+                            }
+                        }
+                        
+                        function renderTime() {
+                            const minutesStr = timerState.minutes.toString().padStart(2, '0');
+                            const secondsStr = timerState.seconds.toString().padStart(2, '0');
+                            timeLeft.textContent = `${minutesStr}:${secondsStr}`;
+                        }
+                        
+                        function finishSession() {
+                            // Play notification sound (browser may block this without user interaction)
+                            try {
+                                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+                                audio.play();
+                            } catch (error) {
+                                console.log('Audio could not be played:', error);
+                            }
+                            
+                            pauseTimer();
+                            
+                            if (timerState.mode === 'focus') {
+                                timerState.completedPomodoros++;
+                                
+                                // Every 4 pomodoros, take a long break, otherwise a short break
+                                if (timerState.completedPomodoros % 4 === 0) {
+                                    switchMode('longBreak');
+                                } else {
+                                    switchMode('shortBreak');
+                                }
+                            } else {
+                                // After a break, switch back to focus
+                                switchMode('focus');
+                            }
+                        }
+                        
+                        function skipSession() {
+                            pauseTimer();
+                            
+                            // Skip to next session type
+                            if (timerState.mode === 'focus') {
+                                if (timerState.completedPomodoros % 4 === 3) {
+                                    // If this would have been the 4th pomodoro, go to long break
+                                    switchMode('longBreak');
+                                } else {
+                                    switchMode('shortBreak');
+                                }
+                            } else {
+                                switchMode('focus');
+                            }
+                        }
+                        
+                        function switchMode(mode) {
+                            timerState.mode = mode;
+                            
+                            // Update session label
+                            if (mode === 'focus') {
+                                sessionLabel.textContent = 'Focus';
+                                timerDisplay.style.background = 'linear-gradient(135deg, #f5576c, #f093fb)';
+                            } else if (mode === 'shortBreak') {
+                                sessionLabel.textContent = 'Short Break';
+                                timerDisplay.style.background = 'linear-gradient(135deg, #4ca2cd, #67B26F)';
+                            } else if (mode === 'longBreak') {
+                                sessionLabel.textContent = 'Long Break';
+                                timerDisplay.style.background = 'linear-gradient(135deg, #3494E6, #EC6EAD)';
+                            }
+                            
+                            // Reset timer to appropriate duration
+                            setCurrentModeTime();
+                            renderTime();
+                        }
+                        
+                        function setCurrentModeTime() {
+                            if (timerState.mode === 'focus') {
+                                timerState.minutes = parseInt(focusTime.textContent);
+                            } else if (timerState.mode === 'shortBreak') {
+                                timerState.minutes = parseInt(shortBreakTime.textContent);
+                            } else if (timerState.mode === 'longBreak') {
+                                timerState.minutes = parseInt(longBreakTime.textContent);
+                            }
+                            timerState.seconds = 0;
+                        }
+                        
+                        function updateSetting(setting, change) {
+                            let element, minValue = 1, maxValue = 60;
+                            
+                            if (setting === 'focus') {
+                                element = focusTime;
+                            } else if (setting === 'shortBreak') {
+                                element = shortBreakTime;
+                            } else if (setting === 'longBreak') {
+                                element = longBreakTime;
+                            }
+                            
+                            let currentValue = parseInt(element.textContent);
+                            let newValue = currentValue + change;
+                            
+                            // Ensure value is within bounds
+                            newValue = Math.max(minValue, Math.min(maxValue, newValue));
+                            
+                            element.textContent = newValue;
+                            
+                            // If timer is not running and in the relevant mode, update current timer
+                            if (!timerState.isRunning && timerState.mode === setting) {
+                                timerState.minutes = newValue;
+                                timerState.seconds = 0;
+                                renderTime();
+                            }
+                        }
+                        
+                        // Task functions
+                        function addTask() {
+                            const taskText = taskInput.value.trim();
+                            if (!taskText) return;
+                            
+                            const task = {
+                                id: Date.now().toString(),
+                                text: taskText,
+                                completed: false
+                            };
+                            
+                            tasks.push(task);
+                            saveTasks();
+                            renderTasks();
+                            
+                            taskInput.value = '';
+                            taskInput.focus();
+                        }
+                        
+                        function toggleTask(id) {
+                            tasks = tasks.map(task => {
+                                if (task.id === id) {
+                                    return {...task, completed: !task.completed};
+                                }
+                                return task;
+                            });
+                            
+                            saveTasks();
+                            renderTasks();
+                        }
+                        
+                        function deleteTask(id) {
+                            tasks = tasks.filter(task => task.id !== id);
+                            saveTasks();
+                            renderTasks();
+                        }
+                        
+                        function saveTasks() {
+                            localStorage.setItem('pomodoro-tasks', JSON.stringify(tasks));
+                        }
+                        
+                        function renderTasks() {
+                            taskList.innerHTML = '';
+                            
+                            if (tasks.length === 0) {
+                                taskList.innerHTML = '<li class="task-item">No tasks yet. Add one above!</li>';
+                                return;
+                            }
+                            
+                            tasks.forEach(task => {
+                                const taskItem = document.createElement('li');
+                                taskItem.classList.add('task-item');
+                                taskItem.dataset.id = task.id;
+                                
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.classList.add('task-checkbox');
+                                checkbox.checked = task.completed;
+                                
+                                const taskText = document.createElement('span');
+                                taskText.classList.add('task-text');
+                                if (task.completed) {
+                                    taskText.classList.add('completed');
+                                }
+                                taskText.textContent = task.text;
+                                
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.classList.add('task-delete');
+                                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                                
+                                taskItem.appendChild(checkbox);
+                                taskItem.appendChild(taskText);
+                                taskItem.appendChild(deleteBtn);
+                                
+                                taskList.appendChild(taskItem);
+                            });
+                        }
+            })
+    </script>
+</body>
+</html>

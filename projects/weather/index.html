@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Dashboard</h1>
+        <div class="search-container">
+            <input type="text" id="city-input" placeholder="Enter city name">
+            <button id="search-btn">Search</button>
+        </div>
+        <div class="weather-container">
+            <div id="current-weather" class="hidden">
+                <h2 id="city-name"></h2>
+                <div class="weather-info">
+                    <div id="weather-icon"></div>
+                    <div class="weather-details">
+                        <p id="temperature"></p>
+                        <p id="description"></p>
+                        <p id="humidity"></p>
+                        <p id="wind-speed"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="forecast" class="hidden">
+                <h3>5-Day Forecast</h3>
+                <div class="forecast-cards" id="forecast-container"></div>
+            </div>
+            <div id="error-message" class="hidden">
+                <p>City not found. Please try again.</p>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
+
